@@ -105,10 +105,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         currentGatewayHost = gateway.host
         if allowCache, let saved = SessionStore.session(forGateway: gateway.host) {
-            Log.info("using saved session for \(gateway.name) from \(saved.created)")
-            currentGateway = gateway.name
-            sessionFromCache = true
-            return saved.authResult
+            if await OpenConnect.sessionLooksValid(saved) {
+                Log.info("using saved session for \(gateway.name) from \(saved.created)")
+                currentGateway = gateway.name
+                sessionFromCache = true
+                return saved.authResult
+            }
+            SessionStore.forget(gatewayHost: gateway.host)
         }
         sessionFromCache = false
 

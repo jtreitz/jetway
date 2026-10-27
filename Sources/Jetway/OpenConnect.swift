@@ -134,6 +134,39 @@ enum OpenConnect {
         return result
     }
 
+    /// Asks the gateway whether a saved session cookie is still valid, without side effects,
+    /// via the HIP status endpoint OpenConnect itself calls after connecting.
+    /// Returns false only on an explicit "Invalid authentication cookie"; anything else
+    /// (network trouble, unexpected answer) returns true so the saved session is still tried.
+    static func sessionLooksValid(_ saved: SavedSession) async -> Bool {
+        var fields: [String: String] = [:]
+        for pair in saved.cookie.split(separator: "&") {
+            let kv = pair.split(separator: "=", maxSplits: 1).map(String.init)
+            if kv.count == 2 { fields[kv[0]] = kv[1].removingPercentEncoding ?? kv[1] }
+        }
+        guard let auth = fields["authcookie"], let user = fields["user"],
+              let url = URL(string: "https://\(saved.gatewayHost)/ssl-vpn/hipreportcheck.esp") else { return true }
+        var req = URLRequest(url: url, timeoutInterval: 10)
+        req.httpMethod = "POST"
+        req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        req.setValue("PAN GlobalProtect", forHTTPHeaderField: "User-Agent")
+        var allowed = CharacterSet.alphanumerics; allowed.insert(charactersIn: "-._")
+        let enc: (String) -> String = { $0.addingPercentEncoding(withAllowedCharacters: allowed) ?? $0 }
+        let body = [
+            "client-role": "global-protect-full", "client-ip": "0.0.0.0", "user": user,
+            "domain": fields["domain"] ?? "", "computer": fields["computer"] ?? "",
+            "portal": fields["portal"] ?? "", "authcookie": auth, "md5": "0123456789abcdef0123456789abcdef",
+        ].map { "\($0.key)=\(enc($0.value))" }.joined(separator: "&")
+        req.httpBody = body.data(using: .utf8)
+        guard let (data, _) = try? await URLSession.shared.data(for: req) else { return true }
+        let xml = String(decoding: data, as: UTF8.self)
+        if xml.contains("Invalid authentication cookie") {
+            Log.info("saved session for \(saved.gatewayName) is no longer valid")
+            return false
+        }
+        return true
+    }
+
     /// OpenConnect lists the portal's gateways as
     /// `  Germany Central (germany-central-….gpcloudservice.com) [priority 0]` / `[unprioritized]`.
     static func parseGateways(_ stderr: String) -> [Gateway] {
