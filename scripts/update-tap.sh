@@ -1,5 +1,6 @@
 #!/bin/sh
 # Points Formula/jetway.rb at GitHub's tarball for the current tagged version and commits.
+# Normally run by scripts/release.sh.
 # This repo is its own Homebrew tap.
 #
 #   1. bump CFBundleShortVersionString in Resources/Info.plist, commit, `git tag vX.Y.Z`, push with --tags
