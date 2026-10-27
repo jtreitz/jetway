@@ -37,12 +37,14 @@ You need macOS 13 or newer, an admin account and [Homebrew](https://brew.sh). Th
 
 ```sh
 brew tap jtreitz/jetway https://github.com/jtreitz/jetway
+brew trust jtreitz/jetway
 brew install jetway
 jetway install
 ```
 
-The first line registers this repository as a Homebrew tap. The second builds Jetway on your Mac in about ten seconds and
-installs OpenConnect alongside. The third copies the app into
+The first two lines register this repository as a Homebrew tap and tell Homebrew you trust it
+(Homebrew 7 asks that for every tap outside its own). The third builds Jetway on your Mac in
+about ten seconds and installs OpenConnect alongside. The third copies the app into
 /Applications and starts it. Building locally is what keeps macOS from complaining about an
 unsigned download: there is no download.
 
