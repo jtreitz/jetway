@@ -21,7 +21,7 @@ VPN or not, plus a sign-in window that floats above everything and ignores your 
 manager. The VPN behind it is fine; the protocol is public and OpenConnect speaks it. All that
 was missing was a decent client. It took an afternoon.
 
-## Install
+## Install Jetway
 
 Needs macOS 13 or newer, an admin account and [Homebrew](https://brew.sh). Paste this into
 Terminal:
@@ -36,7 +36,7 @@ every tap outside its own), builds Jetway on your Mac, installs OpenConnect, put
 the menu bar, **Connect**, sign in, approve the admin prompt. The very first connect asks you to
 sign in twice: once to learn the gateway list, once for the gateway.
 
-### Getting rid of GlobalProtect
+## Get rid of GlobalProtect
 
 `sudo /Applications/GlobalProtect.app/Contents/Resources/uninstall_gp.sh`
 
@@ -49,17 +49,13 @@ sign-in. **Disconnect and Sign Out** ends the session on the gateway too.
 one you're already signed in to. Or pick one by name. "Refresh gateway list" asks the portal
 again next time.
 
-**Sign-in Method.** Where the Microsoft login happens. All three end the same way: the portal
+**Sign-in Method.** Where the Microsoft Entra login happens. All three end the same way: the portal
 hands a one-time cookie back to Jetway, which then opens the tunnel.
 - *System sign-in sheet* (default): macOS's own web sign-in window with Apple Passwords and
-  Touch ID. It shares Safari's Microsoft login, so it's often silent. macOS asks once per
-  sign-in whether Jetway may use microsoftonline.com; that's the price of the sharing.
-- *Default browser*: the login opens as a tab in Chrome, Firefox, Arc or whatever you use, with
-  that browser's saved passwords and its existing Microsoft login. When the login finishes, the
-  browser asks "Open Jetway?" once (tick "always allow") and hands the result over. If
-  GlobalProtect is still installed, Jetway takes over that hand-off link from it when you pick
-  this option.
-- *Built-in window*: a plain web view inside Jetway. Paste works, password managers don't.
+  Touch ID. It shares Safari's Microsoft Entra login, so it's often silent. 
+- *Default browser*: the login opens as a tab in Chrome, Firefox or whatever you use, with
+  that browser's saved passwords and its existing Microsoft Entra login. 
+- *Built-in window*: a plain web view inside Jetway. Paste works, password managers don't. Not recommended.
 
 **Launch at Login.** Starts Jetway at login. It doesn't connect on its own.
 
