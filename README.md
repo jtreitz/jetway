@@ -6,7 +6,7 @@
 
 ---
 
-A small macOS menu bar app that connects you to the Lufthansa VPN with your normal Microsoft
+A small macOS menu bar app that connects you to the Lufthansa VPN with your normal Microsoft Entra
 login. Click the plane, click Connect, sign in, done. The tunnel is
 [OpenConnect](https://www.infradead.org/openconnect/); Jetway is the part you see.
 
@@ -15,7 +15,7 @@ usually need no sign-in at all. Nothing runs while you're not connected.
 
 ## Why
 
-Because GlobalProtect is horrible software and everybody hates it. A root service, a second
+Because GlobalProtect is horrible bloatware and everybody hates it. A root service, a second
 service to resurrect the first one, a host-inspection agent, all running whether you're on the
 VPN or not, plus a sign-in window that floats above everything and ignores your password
 manager. The VPN behind it is fine; the protocol is public and OpenConnect speaks it. All that
@@ -30,27 +30,14 @@ Terminal:
 brew tap jtreitz/jetway https://github.com/jtreitz/jetway && brew trust jtreitz/jetway && brew install jetway && jetway install
 ```
 
-That builds Jetway on your Mac (about ten seconds, no scary "unidentified developer" dialogs),
+That builds Jetway on your Mac,
 installs OpenConnect, puts the app into /Applications and starts it. Then click the plane in
 the menu bar, **Connect**, sign in, approve the admin prompt. The very first connect asks you to
 sign in twice: once to learn the gateway list, once for the gateway.
 
-Update later with:
-
-```sh
-brew update && brew upgrade jetway && jetway install
-```
-
 ### Getting rid of GlobalProtect
 
-Stops it and keeps it from coming back at login; nothing is deleted:
-
-```sh
-launchctl bootout gui/$(id -u)/com.paloaltonetworks.gp.pangpa; launchctl bootout gui/$(id -u)/com.paloaltonetworks.gp.pangps
-launchctl disable gui/$(id -u)/com.paloaltonetworks.gp.pangpa; launchctl disable gui/$(id -u)/com.paloaltonetworks.gp.pangps
-```
-
-For good: `sudo /Applications/GlobalProtect.app/Contents/Resources/uninstall_gp.sh`
+`sudo /Applications/GlobalProtect.app/Contents/Resources/uninstall_gp.sh`
 
 ## Menu and settings
 
