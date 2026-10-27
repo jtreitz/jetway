@@ -1,13 +1,14 @@
 #!/bin/sh
 # Builds Jetway.app into build/ (release, ad-hoc signed). Native architecture by default;
-# UNIVERSAL=1 builds arm64 + x86_64.
+# UNIVERSAL=1 builds arm64 + x86_64. SwiftPM's own sandbox is disabled so the build also
+# works inside Homebrew's sandbox (nested sandboxes are not allowed on macOS).
 set -eu
 cd "$(dirname "$0")/.."
 if [ "${UNIVERSAL:-0}" = 1 ]; then
-  swift build -c release --arch arm64 --arch x86_64
+  swift build -c release --disable-sandbox --arch arm64 --arch x86_64
   BIN=.build/apple/Products/Release/Jetway
 else
-  swift build -c release
+  swift build -c release --disable-sandbox
   BIN=.build/release/Jetway
 fi
 APP=build/Jetway.app
