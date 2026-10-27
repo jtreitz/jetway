@@ -33,8 +33,9 @@ and otherwise gets out of the way. So we wrote one. It took an afternoon.
 
 ## Install
 
-You need macOS 13 or newer, an admin account, [Homebrew](https://brew.sh), and access to this
-GitHub repository from your Mac (`gh auth login`, or an SSH key on your GitHub account).
+You need macOS 13 or newer, an admin account, [Homebrew](https://brew.sh), and read access to
+this GitHub repository from your Mac. The easiest way to get the latter is the GitHub CLI:
+`brew install gh && gh auth login` (pick HTTPS and let it set up git). Then:
 
 ```sh
 brew tap lh-innovationhub/jetway
@@ -42,9 +43,10 @@ brew install jetway
 jetway install
 ```
 
-The first line adds our tap, the second builds Jetway from source on your Mac (about a minute;
-it also installs OpenConnect), the third puts the app into /Applications and starts it. Building
-locally is what keeps macOS from complaining about an unsigned download.
+The first line adds our tap (which carries the source). The second builds Jetway on your Mac
+in about ten seconds and installs OpenConnect alongside. The third copies the app into
+/Applications and starts it. Building locally is what keeps macOS from complaining about an
+unsigned download: there is no download.
 
 Then click the network icon in the menu bar and **Connect**. Sign in with your Lufthansa account
 in the Safari sheet, approve the admin prompt (Touch ID or your Mac password), and you're on.
@@ -128,7 +130,8 @@ still stop it.
 `scripts/build.sh` makes `build/Jetway.app` (`UNIVERSAL=1` for a fat binary). Swift package,
 AppKit, Xcode's command line tools, no Xcode project. The Homebrew formula lives in
 [lh-innovationhub/homebrew-jetway](https://github.com/lh-innovationhub/homebrew-jetway) and just
-runs that script.
+runs that script. To release: bump the version in `Resources/Info.plist`, commit, tag `vX.Y.Z`,
+push with tags, run `scripts/update-tap.sh`, push the tap.
 
 ## Limits
 
