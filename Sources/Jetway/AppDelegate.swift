@@ -197,10 +197,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         case .authenticating:
             symbol = "person.badge.key"; tip = "Jetway: signing in…"
         case .connecting:
-            symbol = "airplane.departure"; tip = "Jetway: boarding…"
+            symbol = "airplane.departure"; tip = "Jetway: connecting…"
         case .connected(let ip, let since):
             symbol = "airplane"
-            tip = "Jetway: airborne as \(ip) for \(Self.duration(since: since))"
+            tip = "Jetway: connected as \(ip) for \(Self.duration(since: since))"
         case .error(let m):
             symbol = "exclamationmark.triangle"; tip = "Jetway: \(m)"
         }
@@ -231,9 +231,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         switch state {
         case .disconnected:          status = "Disconnected"
         case .authenticating:        status = "Signing in…"
-        case .connecting:            status = "Boarding…"
+        case .connecting:            status = "Connecting…"
         case .connected(let ip, let since):
-            status = "Airborne · \(ip) · \(Self.duration(since: since))"
+            status = "Connected · \(ip) · \(Self.duration(since: since))"
         case .error(let m):          status = "Error: \(m)"
         }
         menu.addItem(disabled(status))
