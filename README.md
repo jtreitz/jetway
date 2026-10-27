@@ -33,19 +33,25 @@ and otherwise gets out of the way. So we wrote one. It took an afternoon.
 
 ## Install
 
-You need macOS 13 or newer, an admin account, and [Homebrew](https://brew.sh).
+You need macOS 13 or newer, an admin account, [Homebrew](https://brew.sh), and access to this
+GitHub repository from your Mac (`gh auth login`, or an SSH key on your GitHub account).
 
-1. Grab `Jetway-<version>.zip` from the
-   [Releases](https://github.com/lh-innovationhub/jetway/releases) page and unzip it.
-2. Double-click **Install Jetway.command**. It installs OpenConnect via Homebrew if needed,
-   copies Jetway to /Applications, clears the download quarantine flag and starts the app.
-   If macOS refuses to run the installer, right-click it and choose *Open*.
-3. Click the network icon in the menu bar, then **Connect**.
-4. Sign in with your Lufthansa account in the Safari sheet, then approve the admin prompt
-   (Touch ID or your Mac password).
+```sh
+brew tap lh-innovationhub/jetway
+brew install jetway
+jetway install
+```
 
+The first line adds our tap, the second builds Jetway from source on your Mac (about a minute;
+it also installs OpenConnect), the third puts the app into /Applications and starts it. Building
+locally is what keeps macOS from complaining about an unsigned download.
+
+Then click the network icon in the menu bar and **Connect**. Sign in with your Lufthansa account
+in the Safari sheet, approve the admin prompt (Touch ID or your Mac password), and you're on.
 The very first connect shows the sign-in sheet twice: once to learn the gateway list from the
 portal, once for the gateway itself.
+
+Updating: `brew upgrade jetway && jetway install`.
 
 ### Evicting GlobalProtect
 
@@ -119,11 +125,10 @@ still stop it.
 
 ## Building it yourself
 
-`scripts/build.sh` makes `build/Jetway.app`; `scripts/release.sh` makes the zip with installer.
-Swift package, AppKit, Xcode's toolchain, no Xcode project. The release is ad-hoc signed, which
-is why the installer clears the quarantine flag; a Developer ID certificate in the keychain makes
-`release.sh` sign and (with `NOTARY_PROFILE`) notarize instead. `Casks/jetway.rb` is a Homebrew
-cask waiting for a public tap.
+`scripts/build.sh` makes `build/Jetway.app` (`UNIVERSAL=1` for a fat binary). Swift package,
+AppKit, Xcode's command line tools, no Xcode project. The Homebrew formula lives in
+[lh-innovationhub/homebrew-jetway](https://github.com/lh-innovationhub/homebrew-jetway) and just
+runs that script.
 
 ## Limits
 

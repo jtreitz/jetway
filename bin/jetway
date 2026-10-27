@@ -1,0 +1,26 @@
+#!/bin/sh
+# Jetway command line companion, installed by the Homebrew formula.
+#   jetway install    copy the freshly built app to /Applications and start it
+#   jetway            start Jetway
+#   jetway log        follow the log
+set -eu
+APP_SRC="${JETWAY_APP_SRC:-$(cd "$(dirname "$0")/.." && pwd)/Jetway.app}"
+case "${1:-open}" in
+  install)
+    [ -d "$APP_SRC" ] || { echo "jetway: built app not found at $APP_SRC"; exit 1; }
+    pkill -x Jetway 2>/dev/null && sleep 1 || true
+    rm -rf /Applications/Jetway.app
+    cp -R "$APP_SRC" /Applications/Jetway.app
+    echo "Jetway installed to /Applications. Starting it: look for the network icon in the menu bar."
+    open /Applications/Jetway.app
+    ;;
+  open)
+    open /Applications/Jetway.app 2>/dev/null || open "$APP_SRC"
+    ;;
+  log)
+    tail -f "$HOME/Library/Logs/Jetway/jetway.log"
+    ;;
+  *)
+    echo "usage: jetway [install|open|log]"; exit 1
+    ;;
+esac
