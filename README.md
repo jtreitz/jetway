@@ -59,12 +59,12 @@ hands a one-time cookie back to Jetway, which then opens the tunnel.
 
 **Launch at Login.** Starts Jetway at login. It doesn't connect on its own.
 
-**Enable Root Privileges (skip password prompt).** Off by default. Every Connect needs root
+**Enable Root Privileges (Skip Password).** Off by default. Every Connect needs root
 to open the tunnel, hence the admin prompt. This switch installs a root-owned copy of Jetway's
 helper and a sudoers rule for exactly that file, after one last prompt. No password is stored.
 The trade-off: anything running as your user could then start OpenConnect as root, which on a
 Homebrew Mac is a possible road to root for malware. The same switch removes it again.
 
-**Forget Saved VPN Sessions.** Next Connect signs in again.
+**Forget Saved Logins.** Next Connect signs in again.
 
 **Show Log.** Everything Jetway and OpenConnect said, for when something's off.

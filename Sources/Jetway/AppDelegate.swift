@@ -324,11 +324,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             login.state = SMAppService.mainApp.status == .enabled ? .on : .off
             settings.addItem(login)
         }
-        let pw = action("Enable Root Privileges (skip password prompt)", #selector(togglePasswordless))
+        let pw = action("Enable Root Privileges (Skip Password)", #selector(togglePasswordless))
         pw.state = Passwordless.installed ? .on : .off
         settings.addItem(pw)
         settings.addItem(.separator())
-        settings.addItem(action("Forget Saved VPN Sessions", #selector(forgetSessions)))
+        settings.addItem(action("Forget Saved Logins", #selector(forgetSessions)))
         let sItem = NSMenuItem(title: "Settings", action: nil, keyEquivalent: "")
         sItem.submenu = settings
         menu.addItem(sItem)
