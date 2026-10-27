@@ -1,8 +1,8 @@
 class Jetway < Formula
   desc "Menu bar client for the Lufthansa GlobalProtect VPN (Prisma Access)"
   homepage "https://github.com/jtreitz/jetway"
-  url "https://github.com/jtreitz/jetway/archive/refs/tags/v0.1.7.tar.gz"
-  sha256 "1992884e20e2e182f27da990de8bafd8b2362f1c3e3dc17d774bc87a53a876e4"
+  url "https://github.com/jtreitz/jetway/archive/refs/tags/v0.1.8.tar.gz"
+  sha256 "76840f078fe473a235fd41141f7d3b70dd6d83bb1bd8cba9beda331c1a8d063d"
   head "https://github.com/jtreitz/jetway.git", branch: "main"
 
   depends_on "openconnect"
