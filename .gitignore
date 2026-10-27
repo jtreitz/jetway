@@ -1,0 +1,6 @@
+.build/
+build/*
+!build/icon.iconset/
+dist/
+*.dSYM
+.DS_Store

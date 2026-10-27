@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>                 <string>Jetway</string>
+    <key>CFBundleDisplayName</key>          <string>Jetway</string>
+    <key>CFBundleIdentifier</key>           <string>dev.treitz.Jetway</string>
+    <key>CFBundleExecutable</key>           <string>Jetway</string>
+    <key>CFBundlePackageType</key>          <string>APPL</string>
+    <key>CFBundleShortVersionString</key>   <string>0.1.0</string>
+    <key>CFBundleVersion</key>              <string>1</string>
+    <key>CFBundleIconFile</key>             <string>AppIcon</string>
+    <key>JetwayDefaultPortal</key>          <string>lca.lufthansa.com</string>
+    <key>LSMinimumSystemVersion</key>       <string>13.0</string>
+    <key>LSUIElement</key>                  <true/>
+    <key>NSHighResolutionCapable</key>      <true/>
+    <key>NSPrincipalClass</key>             <string>NSApplication</string>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>     <string>GlobalProtect SAML callback</string>
+            <key>CFBundleURLSchemes</key>  <array><string>globalprotectcallback</string></array>
+        </dict>
+    </array>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>   <false/>
+    </dict>
+</dict>
+</plist>

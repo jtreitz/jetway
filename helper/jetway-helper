@@ -1,0 +1,133 @@
+#!/bin/sh
+# Jetway.app privileged helper. Runs as root either after the macOS admin prompt (default) or,
+# if the user opted in, via a sudoers rule that allows exactly this script and nothing else.
+#
+#   jetway-helper check
+#   jetway-helper connect HOST FINGERPRINT RESOLVE STOPFILE   (session cookie on stdin)
+#   jetway-helper disconnect
+#   jetway-helper enable-passwordless USER                     (installs root-owned copy + sudoers rule)
+#   jetway-helper disable-passwordless
+#
+# It validates every argument, runs OpenConnect with a fixed option set, and ends the session
+# when the (unprivileged) app creates STOPFILE.
+set -u
+exec 2>&1
+
+# Homebrew prefix: Apple silicon first, then Intel.
+OC=/opt/homebrew/bin/openconnect
+[ -x "$OC" ] || OC=/usr/local/bin/openconnect
+PREFIX="$(dirname "$(dirname "$OC")")"
+HIP="$PREFIX/opt/openconnect/libexec/openconnect/hipreport.sh"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+VPNC="$HERE/vpnc-script"
+[ -x "$VPNC" ] || VPNC="$PREFIX/etc/vpnc/vpnc-script"
+
+INSTALL_DIR=/Library/PrivilegedHelperTools/dev.treitz.Jetway
+# No dots in the file name: sudo ignores sudoers.d entries containing '.' or ending in '~'.
+SUDOERS=/etc/sudoers.d/jetway_helper
+OLD_SUDOERS="/etc/sudoers.d/tunnel_helper /etc/sudoers.d/dev.treitz.Tunnel"
+OLD_INSTALL_DIR=/Library/PrivilegedHelperTools/dev.treitz.Tunnel
+
+die() { echo "jetway-helper: $*"; exit 2; }
+
+cmd=${1:-}
+[ $# -gt 0 ] && shift
+
+case "$cmd" in
+  check)
+    [ -x "$OC" ] || die "openconnect not found at $OC"
+    echo ok
+    ;;
+
+  connect)
+    host=${1:-}; fp=${2:-}; resolve=${3:-}; stopfile=${4:-}
+    [ -x "$OC" ] || die "openconnect not found at $OC"
+    expr "$host" : '^[A-Za-z0-9.-]\{1,253\}$' >/dev/null || die "bad host"
+    expr "$fp" : '^pin-sha256:[A-Za-z0-9+/=]\{40,64\}$' >/dev/null || die "bad fingerprint"
+    if [ -n "$resolve" ] && [ "$resolve" != "-" ]; then
+      expr "$resolve" : '^[A-Za-z0-9.-]\{1,253\}:[0-9A-Fa-f.:]\{1,45\}$' >/dev/null || die "bad resolve"
+    else
+      resolve=""
+    fi
+    expr "$stopfile" : '^/Users/[A-Za-z0-9._-]\{1,64\}/Library/Application Support/Jetway/stop$' >/dev/null || die "bad stopfile"
+    rm -f "$stopfile"
+
+    IFS= read -r cookie || die "no cookie on stdin"
+    [ -n "$cookie" ] || die "empty cookie"
+
+    set -- --protocol=gp --os=mac-intel --non-inter --cookie-on-stdin \
+           --servercert="$fp" --script="$VPNC" --csd-wrapper="$HIP"
+    [ -n "$resolve" ] && set -- "$@" --resolve="$resolve"
+
+    # Job control on, so the backgrounded OpenConnect keeps a working SIGINT disposition.
+    set -m
+    printf '%s\n' "$cookie" | "$OC" "$@" "$host" &
+    pid=$!
+    set +m
+    unset cookie
+    trap 'kill -INT "$pid" 2>/dev/null' TERM INT
+    trap 'kill -HUP "$pid" 2>/dev/null' HUP
+
+    # Supervise: stop file from the app, or OpenConnect exiting on its own.
+    # Stop file content "logout" -> SIGINT (OpenConnect logs out, session ends on the gateway).
+    # Anything else           -> SIGHUP (OpenConnect detaches; the session stays reusable).
+    while kill -0 "$pid" 2>/dev/null; do
+      if [ -e "$stopfile" ]; then
+        mode=$(cat "$stopfile" 2>/dev/null)
+        rm -f "$stopfile"
+        if [ "$mode" = "logout" ]; then
+          echo "jetway-helper: stop requested (logout)"
+          kill -INT "$pid" 2>/dev/null
+        else
+          echo "jetway-helper: stop requested (detach)"
+          kill -HUP "$pid" 2>/dev/null
+        fi
+        n=0
+        while kill -0 "$pid" 2>/dev/null && [ $n -lt 16 ]; do sleep 0.5; n=$((n+1)); done
+        kill -TERM "$pid" 2>/dev/null
+      fi
+      sleep 0.5
+    done
+    wait "$pid"
+    echo "jetway-helper: openconnect exited $?"
+    ;;
+
+  disconnect)
+    pkill -INT -x openconnect && echo "jetway-helper: sent SIGINT" || echo "jetway-helper: no openconnect running"
+    ;;
+
+  enable-passwordless)
+    user=${1:-}
+    expr "$user" : '^[a-z_][a-z0-9_.-]\{0,31\}$' >/dev/null || die "bad user"
+    id -u "$user" >/dev/null 2>&1 || die "no such user"
+    [ -f "$HERE/vpnc-script" ] || die "vpnc-script missing next to helper"
+    mkdir -p "$INSTALL_DIR"
+    chown root:wheel /Library/PrivilegedHelperTools "$INSTALL_DIR"
+    chmod 755 /Library/PrivilegedHelperTools "$INSTALL_DIR"
+    cp "$0" "$INSTALL_DIR/jetway-helper"
+    cp "$HERE/vpnc-script" "$INSTALL_DIR/vpnc-script"
+    chown root:wheel "$INSTALL_DIR/jetway-helper" "$INSTALL_DIR/vpnc-script"
+    chmod 755 "$INSTALL_DIR/jetway-helper" "$INSTALL_DIR/vpnc-script"
+    printf '%s ALL=(root) NOPASSWD: %s/jetway-helper\n' "$user" "$INSTALL_DIR" > "$SUDOERS.tmp"
+    chmod 440 "$SUDOERS.tmp"
+    rm -f $OLD_SUDOERS
+    rm -rf "$OLD_INSTALL_DIR"
+    if visudo -cf "$SUDOERS.tmp" >/dev/null; then
+      mv "$SUDOERS.tmp" "$SUDOERS"
+      echo "jetway-helper: passwordless mode enabled for $user"
+    else
+      rm -f "$SUDOERS.tmp"
+      die "sudoers validation failed"
+    fi
+    ;;
+
+  disable-passwordless)
+    rm -f "$SUDOERS" "$SUDOERS.tmp" $OLD_SUDOERS
+    rm -rf "$INSTALL_DIR" "$OLD_INSTALL_DIR"
+    echo "jetway-helper: passwordless mode disabled"
+    ;;
+
+  *)
+    die "usage: jetway-helper check | connect HOST FINGERPRINT RESOLVE STOPFILE | disconnect | enable-passwordless USER | disable-passwordless"
+    ;;
+esac
