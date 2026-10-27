@@ -190,24 +190,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let tip: String
         switch state {
         case .disconnected:
-            symbol = "network.slash"; tip = "Jetway: disconnected"
+            symbol = "airplane"; tip = "Jetway: disconnected"
         case .authenticating:
             symbol = "person.badge.key"; tip = "Jetway: signing in…"
         case .connecting:
-            symbol = "network"; tip = "Jetway: boarding…"
+            symbol = "airplane.departure"; tip = "Jetway: boarding…"
         case .connected(let ip, let since):
-            symbol = "network.badge.shield.half.filled"
+            symbol = "airplane"
             tip = "Jetway: airborne as \(ip) for \(Self.duration(since: since))"
         case .error(let m):
             symbol = "exclamationmark.triangle"; tip = "Jetway: \(m)"
         }
         let base = NSImage(systemSymbolName: symbol, accessibilityDescription: tip)
-            ?? NSImage(systemSymbolName: "network", accessibilityDescription: tip)
+            ?? NSImage(systemSymbolName: "airplane", accessibilityDescription: tip)
         let config = NSImage.SymbolConfiguration(pointSize: 16, weight: .regular, scale: .medium)
         let img = base?.withSymbolConfiguration(config) ?? base
         img?.isTemplate = true
         button.image = img
         button.toolTip = tip
+        // Grounded: the plane is dimmed while there is no tunnel.
+        if case .disconnected = state { button.appearsDisabled = true } else { button.appearsDisabled = false }
     }
 
     private static func duration(since: Date) -> String {
