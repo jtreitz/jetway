@@ -21,11 +21,27 @@ enum Settings {
         set { d.set(newValue, forKey: "username") }
     }
 
-    /// Sign in through Safari's authentication session (Passwords AutoFill, Touch ID, shared
-    /// Safari login). Off = built-in WebKit window.
-    static var useSafari: Bool {
-        get { d.object(forKey: "useSafari") as? Bool ?? true }
-        set { d.set(newValue, forKey: "useSafari") }
+    enum SignInMethod: String, CaseIterable {
+        case sheet      // macOS web authentication sheet (Apple Passwords, Touch ID)
+        case browser    // the user's default browser, result via globalprotectcallback:
+        case window     // built-in WebKit window
+
+        var title: String {
+            switch self {
+            case .sheet:   return "System sign-in sheet (Apple Passwords, Touch ID)"
+            case .browser: return "Default browser (Chrome, Firefox, …)"
+            case .window:  return "Built-in window"
+            }
+        }
+    }
+
+    static var signInMethod: SignInMethod {
+        get {
+            if let raw = d.string(forKey: "signInMethod"), let m = SignInMethod(rawValue: raw) { return m }
+            if let old = d.object(forKey: "useSafari") as? Bool { return old ? .sheet : .window }
+            return .sheet
+        }
+        set { d.set(newValue.rawValue, forKey: "signInMethod") }
     }
 
     /// Selected gateway (display name as the portal reports it). nil = automatic.
@@ -74,7 +90,7 @@ enum Settings {
     static func migrateFromTunnelIfNeeded() {
         guard d.object(forKey: "portal") == nil, d.object(forKey: "gatewayList") == nil,
               let old = UserDefaults(suiteName: "dev.treitz.Tunnel") else { return }
-        for key in ["portal", "username", "gateway", "gatewayList", "lastGateway", "region", "useSafari", "userAgent"] {
+        for key in ["portal", "username", "gateway", "gatewayList", "lastGateway", "region", "useSafari", "signInMethod", "userAgent"] {
             if let v = old.object(forKey: key) { d.set(v, forKey: key) }
         }
         let fm = FileManager.default

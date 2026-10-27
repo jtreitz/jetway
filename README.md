@@ -10,8 +10,8 @@ A small macOS menu bar app that connects you to the Lufthansa VPN with your norm
 login. Click the plane, click Connect, sign in, done. The tunnel is
 [OpenConnect](https://www.infradead.org/openconnect/); Jetway is the part you see.
 
-Sign-in happens in Safari's own sheet, so Apple Passwords, Touch ID and paste work. Reconnects
-usually need no sign-in at all. Nothing runs while you're not connected.
+Sign-in happens in macOS's own sign-in sheet or in your browser, so your password manager works.
+Reconnects usually need no sign-in at all. Nothing runs while you're not connected.
 
 ## Why
 
@@ -30,8 +30,9 @@ Terminal:
 brew tap jtreitz/jetway https://github.com/jtreitz/jetway && brew trust jtreitz/jetway && brew install jetway && jetway install
 ```
 
-That builds Jetway on your Mac,
-installs OpenConnect, puts the app into /Applications and starts it. Then click the plane in
+That registers this repository as a Homebrew tap, marks it trusted (Homebrew asks that once for
+every tap outside its own), builds Jetway on your Mac, installs OpenConnect, puts the app into
+/Applications and starts it. Then click the plane in
 the menu bar, **Connect**, sign in, approve the admin prompt. The very first connect asks you to
 sign in twice: once to learn the gateway list, once for the gateway.
 
@@ -48,9 +49,17 @@ sign-in. **Disconnect and Sign Out** ends the session on the gateway too.
 one you're already signed in to. Or pick one by name. "Refresh gateway list" asks the portal
 again next time.
 
-**Sign-in Method.** Safari (default: AutoFill, Touch ID, shared Microsoft login; macOS asks
-once per sign-in whether Jetway may use microsoftonline.com) or a built-in window (paste works,
-AutoFill doesn't).
+**Sign-in Method.** Where the Microsoft login happens. All three end the same way: the portal
+hands a one-time cookie back to Jetway, which then opens the tunnel.
+- *System sign-in sheet* (default): macOS's own web sign-in window with Apple Passwords and
+  Touch ID. It shares Safari's Microsoft login, so it's often silent. macOS asks once per
+  sign-in whether Jetway may use microsoftonline.com; that's the price of the sharing.
+- *Default browser*: the login opens as a tab in Chrome, Firefox, Arc or whatever you use, with
+  that browser's saved passwords and its existing Microsoft login. When the login finishes, the
+  browser asks "Open Jetway?" once (tick "always allow") and hands the result over. If
+  GlobalProtect is still installed, Jetway takes over that hand-off link from it when you pick
+  this option.
+- *Built-in window*: a plain web view inside Jetway. Paste works, password managers don't.
 
 **Launch at Login.** Starts Jetway at login. It doesn't connect on its own.
 

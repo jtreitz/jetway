@@ -17,6 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var tunnel: TunnelProcess?
     private var saml: SAMLAuth?
     private var safari: SafariAuth?
+    private var browser: BrowserAuth?
     private var connectTask: Task<Void, Never>?
     private var currentHost: String?
     private var currentGateway: String?
@@ -39,20 +40,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         guard let str = event.paramDescriptor(forKeyword: AEKeyword(keyDirectObject))?.stringValue,
               let url = URL(string: str) else { return }
         Log.info("received URL event for scheme \(url.scheme ?? "")")
+        browser?.deliver(url)
         safari?.deliver(url)
     }
 
     /// Runs prelogin + SAML sign-in against a portal or gateway with the configured method.
     private func signIn(host: String, endpoint: Portal.Endpoint) async throws -> SAMLAuth.Result {
         let ua = Settings.userAgent
-        if Settings.useSafari {
+        switch Settings.signInMethod {
+        case .sheet:
             let prelogin = try await Portal.prelogin(host: host, endpoint: endpoint, userAgent: ua, defaultBrowser: true)
             if let r = prelogin.region { Settings.region = r }
             let s = SafariAuth()
             safari = s
             defer { safari = nil }
             return try await s.run(prelogin)
-        } else {
+        case .browser:
+            let prelogin = try await Portal.prelogin(host: host, endpoint: endpoint, userAgent: ua, defaultBrowser: true)
+            if let r = prelogin.region { Settings.region = r }
+            let b = BrowserAuth()
+            browser = b
+            defer { browser = nil }
+            return try await b.run(prelogin)
+        case .window:
             let prelogin = try await Portal.prelogin(host: host, endpoint: endpoint, userAgent: ua, defaultBrowser: false)
             if let r = prelogin.region { Settings.region = r }
             let auth = SAMLAuth(portal: host)
@@ -142,6 +152,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem.menu = menu
         renderIcon()
         Task { passwordless = await Passwordless.works(); Log.info("passwordless mode: \(passwordless)") }
+        if Settings.signInMethod == .browser { BrowserAuth.claimCallbackScheme() }
         if TunnelProcess.externalSessionRunning() {
             Log.info("openconnect already running from an earlier session")
             state = .connected(ip: "earlier session", since: Date())
@@ -160,7 +171,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let portal = Settings.portal
         print("portal: \(portal)")
         do {
-            print("sign-in method: \(Settings.useSafari ? "safari" : "window")")
+            print("sign-in method: \(Settings.signInMethod.rawValue)")
             let session = try await obtainSession()
             print("openconnect auth: ok")
             print("  gateway: \(currentGateway ?? "-")")
@@ -294,13 +305,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         settings.addItem(.separator())
 
         let methodMenu = NSMenu()
-        let viaSafari = action("Safari", #selector(useSafariSignIn))
-        viaSafari.state = Settings.useSafari ? .on : .off
-        let viaWindow = action("Built-in window", #selector(useWindowSignIn))
-        viaWindow.state = Settings.useSafari ? .off : .on
-        methodMenu.addItem(viaSafari)
-        methodMenu.addItem(viaWindow)
-        if !Settings.useSafari {
+        for m in Settings.SignInMethod.allCases {
+            let i = action(m.title, #selector(selectSignInMethod(_:)))
+            i.representedObject = m.rawValue
+            i.state = Settings.signInMethod == m ? .on : .off
+            methodMenu.addItem(i)
+        }
+        if Settings.signInMethod == .window {
             methodMenu.addItem(.separator())
             methodMenu.addItem(action("Forget Entra session", #selector(clearWebData)))
         }
@@ -362,6 +373,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 state = .disconnected
             } catch let f as SafariAuth.Failure where { if case .cancelled = f { return true }; return false }() {
                 state = .disconnected
+            } catch let f as BrowserAuth.Failure where { if case .cancelled = f { return true }; return false }() {
+                state = .disconnected
             } catch {
                 Log.error("connect failed: \(error.localizedDescription)")
                 state = .error(error.localizedDescription)
@@ -369,6 +382,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             }
             saml = nil
             safari = nil
+            browser = nil
             connectTask = nil
         }
     }
@@ -438,7 +452,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                     state = .error(error.localizedDescription)
                     alert("Could not connect", error.localizedDescription)
                 }
-                saml = nil; safari = nil; connectTask = nil
+                saml = nil; safari = nil; browser = nil; connectTask = nil
             }
         } else {
             state = .error("tunnel failed to start (see log)")
@@ -473,6 +487,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             }
         } else if let s = safari {
             s.cancel()
+        } else if let b = browser {
+            b.cancel()
         } else if let s = saml {
             s.cancel()
         } else {
@@ -562,8 +578,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-    @objc private func useSafariSignIn() { Settings.useSafari = true }
-    @objc private func useWindowSignIn() { Settings.useSafari = false }
+    @objc private func selectSignInMethod(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String, let m = Settings.SignInMethod(rawValue: raw) else { return }
+        Settings.signInMethod = m
+        if m == .browser { BrowserAuth.claimCallbackScheme() }
+    }
 
     @objc private func clearWebData() {
         let store = WKWebsiteDataStore.default()
