@@ -48,7 +48,7 @@ about ten seconds and installs OpenConnect alongside. The third copies the app i
 /Applications and starts it. Building locally is what keeps macOS from complaining about an
 unsigned download: there is no download.
 
-Then click the network icon in the menu bar and **Connect**. Sign in with your Lufthansa account
+Then click the plane in the menu bar and **Connect**. Sign in with your Lufthansa account
 in the Safari sheet, approve the admin prompt (Touch ID or your Mac password), and you're on.
 The very first connect shows the sign-in sheet twice: once to learn the gateway list from the
 portal, once for the gateway itself.

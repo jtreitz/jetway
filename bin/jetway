@@ -11,7 +11,7 @@ case "${1:-open}" in
     pkill -x Jetway 2>/dev/null && sleep 1 || true
     rm -rf /Applications/Jetway.app
     cp -R "$APP_SRC" /Applications/Jetway.app
-    echo "Jetway installed to /Applications. Starting it: look for the network icon in the menu bar."
+    echo "Jetway installed to /Applications. Starting it: look for the plane in the menu bar."
     open /Applications/Jetway.app
     ;;
   open)
