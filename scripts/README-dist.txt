@@ -9,7 +9,7 @@ INSTALL
      then approve the admin prompt (Touch ID or password).
 
 AFTER THE FIRST TIME
-  Reconnecting reuses the VPN session for ~30 days: no sign-in, just the admin prompt.
+  Reconnecting usually needs no sign-in, just the admin prompt, until the portal expires the session.
   Settings → "Enable Root Privileges (skip password prompt)" removes that prompt too;
   read the dialog first, it explains the trade-off.
 
