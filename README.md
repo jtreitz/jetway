@@ -33,18 +33,16 @@ and otherwise gets out of the way. So we wrote one. It took an afternoon.
 
 ## Install
 
-You need macOS 13 or newer, an admin account, [Homebrew](https://brew.sh), and read access to
-this GitHub repository from your Mac. The easiest way to get the latter is the GitHub CLI:
-`brew install gh && gh auth login` (pick HTTPS and let it set up git). Then:
+You need macOS 13 or newer, an admin account and [Homebrew](https://brew.sh). Then:
 
 ```sh
-brew tap lh-innovationhub/jetway
+brew tap jtreitz/jetway
 brew install jetway
 jetway install
 ```
 
-The first line adds our tap (which carries the source). The second builds Jetway on your Mac
-in about ten seconds and installs OpenConnect alongside. The third copies the app into
+The first line adds the tap. The second builds Jetway on your Mac in about ten seconds and
+installs OpenConnect alongside. The third copies the app into
 /Applications and starts it. Building locally is what keeps macOS from complaining about an
 unsigned download: there is no download.
 
