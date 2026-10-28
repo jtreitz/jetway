@@ -6,16 +6,16 @@
 
 ---
 
-A small macOS menu bar app that connects you to the Lufthansa VPN with your normal Microsoft Entra
-login. Click the plane, click Connect, sign in, done. The tunnel is
-[OpenConnect](https://www.infradead.org/openconnect/); Jetway is the part you see.
+A small macOS menu bar app that connects you to the Lufthansa VPN. The tunnel itself is
+[OpenConnect](https://www.infradead.org/openconnect/); Jetway is the UI on top of it.
 
 Sign-in happens in macOS's own sign-in sheet or in your browser, so your password manager works.
-Reconnects usually need no sign-in at all. Nothing runs while you're not connected.
+
+No root service running in the background. Root is used only for the lifetime of a connection, and by default no standing privilege is installed.
 
 ## Why
 
-Because GlobalProtect is horrible bloatware and everybody hates it. A root service, a second
+Because GlobalProtect is horrible crapware and everybody hates it. A root service, a second
 service to resurrect the first one, a host-inspection agent, all running whether you're on the
 VPN or not, plus a sign-in window that floats above everything and ignores your password
 manager. The VPN behind it is fine; the protocol is public and OpenConnect speaks it. All that
@@ -32,8 +32,9 @@ brew tap jtreitz/jetway https://github.com/jtreitz/jetway && brew trust jtreitz/
 
 That registers this repository as a Homebrew tap, marks it trusted (Homebrew asks that once for
 every tap outside its own), builds Jetway on your Mac, installs OpenConnect, puts the app into
-/Applications and starts it. Then click the plane in
-the menu bar, **Connect**, sign in, approve the admin prompt. The very first connect asks you to
+/Applications and starts it. 
+
+Then click the plane in the menu bar, Connect, sign in, approve the admin prompt. The very first connect asks you to
 sign in twice: once to learn the gateway list, once for the gateway.
 
 ## Get rid of GlobalProtect
@@ -42,8 +43,8 @@ sign in twice: once to learn the gateway list, once for the gateway.
 
 ## Menu and settings
 
-**Connect / Disconnect.** Disconnect keeps your VPN session, so the next Connect skips the
-sign-in. **Disconnect and Sign Out** ends the session on the gateway too.
+**Connect / Disconnect.** Disconnect keeps your login, so the next Connect skips the
+sign-in. Disconnect and Sign Out ends the session on the gateway too.
 
 **Gateway.** Automatic picks the fastest of the gateways the portal prefers for you, favouring
 one you're already signed in to. Or pick one by name. "Refresh gateway list" asks the portal
@@ -52,7 +53,7 @@ again next time.
 **Sign-in Method.** Where the Microsoft Entra login happens. All three end the same way: the portal
 hands a one-time cookie back to Jetway, which then opens the tunnel.
 - *System sign-in sheet* (default): macOS's own web sign-in window with Apple Passwords and
-  Touch ID. It shares Safari's Microsoft Entra login, so it's often silent. 
+  Touch ID. 
 - *Default browser*: the login opens as a tab in Chrome, Firefox or whatever you use, with
   that browser's saved passwords and its existing Microsoft Entra login. 
 - *Built-in window*: a plain web view inside Jetway. Paste works, password managers don't. Not recommended.
