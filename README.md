@@ -37,6 +37,20 @@ every tap outside its own), builds Jetway on your Mac, installs OpenConnect, put
 Then click the plane in the menu bar, Connect, sign in, approve the admin prompt. The very first connect asks you to
 sign in twice: once to learn the gateway list, once for the gateway.
 
+## Command line
+
+```sh
+jetway connect          # same as the Connect menu item
+jetway connect --wait   # block until connected (exit 0) or failed (exit 1), up to 120 s
+jetway disconnect       # same as Disconnect, keeps your login
+jetway status           # disconnected, authenticating, connecting, connected <ip> or error <message>
+```
+
+Scripts and coding agents can bring the VPN up before they need it. The app does the work, so
+the commands behave exactly like the menu. Without a saved login, the sign-in sheet still opens,
+and without "Enable Root Privileges" the admin prompt still appears. `JETWAY_WAIT_SECONDS`
+changes the wait.
+
 ## Get rid of GlobalProtect
 
 `sudo /Applications/GlobalProtect.app/Contents/Resources/uninstall_gp.sh`

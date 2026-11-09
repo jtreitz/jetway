@@ -19,6 +19,7 @@ enum Paths {
         return d
     }()
     static var stopFile: URL { supportDir.appendingPathComponent("stop") }
+    static var stateFile: URL { supportDir.appendingPathComponent("state") }
     static let installedHelper = "/Library/PrivilegedHelperTools/dev.treitz.Jetway/jetway-helper"
     static let sudo = "/usr/bin/sudo"
 }

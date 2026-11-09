@@ -26,6 +26,14 @@
 				<string>globalprotectcallback</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Jetway command</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>jetway</string>
+			</array>
+		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>10</string>

@@ -11,7 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         case error(String)
     }
 
-    private var state: State = .disconnected { didSet { renderIcon() } }
+    private var state: State = .disconnected { didSet { renderIcon(); writeStateFile() } }
     private var statusItem: NSStatusItem!
     private let menu = NSMenu()
     private var tunnel: TunnelProcess?
@@ -35,11 +35,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                                                      andEventID: AEEventID(kAEGetURL))
     }
 
+    /// jetway://connect and jetway://disconnect come from the `jetway` CLI and do what the menu items do.
     /// If Launch Services routes the globalprotectcallback: URL to us, hand it to the pending sign-in.
     @objc private func handleURLEvent(_ event: NSAppleEventDescriptor, with reply: NSAppleEventDescriptor) {
         guard let str = event.paramDescriptor(forKeyword: AEKeyword(keyDirectObject))?.stringValue,
               let url = URL(string: str) else { return }
         Log.info("received URL event for scheme \(url.scheme ?? "")")
+        if url.scheme == "jetway" {
+            switch url.host {
+            case "connect": connect()
+            case "disconnect": disconnect()
+            default: Log.error("unknown command \(url.host ?? "")")
+            }
+            return
+        }
         browser?.deliver(url)
         safari?.deliver(url)
     }
@@ -157,6 +166,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             Log.info("openconnect already running from an earlier session")
             state = .connected(ip: "earlier session", since: Date())
         }
+        writeStateFile()
         Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { _ in
             Task { @MainActor in self.renderIcon() }
         }
@@ -194,6 +204,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         while tunnel != nil && Date() < deadline {
             RunLoop.current.run(mode: .default, before: Date().addingTimeInterval(0.1))
         }
+        try? FileManager.default.removeItem(at: Paths.stateFile)
     }
 
     // MARK: - Status item
@@ -224,6 +235,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         button.toolTip = tip
         // Grounded: the plane is dimmed while there is no tunnel.
         if case .disconnected = state { button.appearsDisabled = true } else { button.appearsDisabled = false }
+    }
+
+    /// One line for `jetway status`: the state, then the IP or the error message.
+    private func writeStateFile() {
+        let line: String
+        switch state {
+        case .disconnected:               line = "disconnected"
+        case .authenticating:             line = "authenticating"
+        case .connecting:                 line = "connecting"
+        case .connected(let ip, _):       line = "connected \(ip)"
+        case .error(let m):               line = "error \(m)"
+        }
+        try? (line + "\n").write(to: Paths.stateFile, atomically: true, encoding: .utf8)
     }
 
     private static func duration(since: Date) -> String {

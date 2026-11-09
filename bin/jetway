@@ -1,10 +1,21 @@
 #!/bin/sh
 # Jetway command line companion, installed by the Homebrew formula.
-#   jetway install    copy the freshly built app to /Applications and start it
-#   jetway            start Jetway
-#   jetway log        follow the log
+#   jetway install            copy the freshly built app to /Applications and start it
+#   jetway                    start Jetway
+#   jetway log                follow the log
+#   jetway connect [--wait]   connect like the menu item; --wait blocks until connected or failed
+#   jetway disconnect         disconnect like the menu item; keeps the saved login
+#   jetway status             print the state; exit 0 only when connected
 set -eu
 APP_SRC="${JETWAY_APP_SRC:-$(cd "$(dirname "$0")/.." && pwd)/Jetway.app}"
+STATE_FILE="$HOME/Library/Application Support/Jetway/state"
+# Sign-in can need a person at the sign-in sheet, so the default wait is generous.
+WAIT_SECONDS="${JETWAY_WAIT_SECONDS:-120}"
+
+state() {
+  if pgrep -xq Jetway && [ -f "$STATE_FILE" ]; then cat "$STATE_FILE"; else echo "not running"; fi
+}
+
 case "${1:-open}" in
   install)
     [ -d "$APP_SRC" ] || { echo "jetway: built app not found at $APP_SRC"; exit 1; }
@@ -20,7 +31,27 @@ case "${1:-open}" in
   log)
     tail -f "$HOME/Library/Logs/Jetway/jetway.log"
     ;;
+  connect)
+    open -g jetway://connect
+    [ "${2:-}" = "--wait" ] || exit 0
+    i=0
+    while [ "$i" -lt "$WAIT_SECONDS" ]; do
+      sleep 1; i=$((i + 1))
+      case "$(state)" in
+        connected*) state; exit 0 ;;
+        error*|disconnected) [ "$i" -gt 2 ] && { state; exit 1; } ;;
+      esac
+    done
+    echo "jetway: not connected after ${WAIT_SECONDS}s: $(state)"; exit 1
+    ;;
+  disconnect)
+    open -g jetway://disconnect
+    ;;
+  status)
+    s=$(state); echo "$s"
+    case "$s" in connected*) exit 0 ;; *) exit 1 ;; esac
+    ;;
   *)
-    echo "usage: jetway [install|open|log]"; exit 1
+    echo "usage: jetway [install|open|log|connect [--wait]|disconnect|status]"; exit 1
     ;;
 esac
